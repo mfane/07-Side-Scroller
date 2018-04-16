@@ -16,7 +16,15 @@ screen_size = (800,600)
 FPS = 60
 gravity = 2
 friction = 0.3
-lives = 5
+lives = 10
+
+class GameOver(pygame.sprite.Sprite):
+	def __init__(self):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = pygame.image.load(os.path.join('.', 'skull.png')).convert()
+		self.rect = self.image.get_rect()
+		self.rect.x = 330
+		self.rect.y = 250
 
 
 def main():
@@ -51,6 +59,10 @@ def main():
 	sound.play_sound('footstep')
 	'''
 
+	sound.add_music('Brazzmatazz_-_10_-_Mezcal_Y_Sangrita.mp3')
+	sound.add_music('Brazzmatazz_-_07_-_Tiny_Tiger.mp3')
+	sound.play_music()
+
 	level = Level('level_1.game') #a game level definition
 	players = pygame.sprite.Group()
 	player = Player(level.get_player_starting_position(),lives,level.block_size,gravity,friction)
@@ -73,33 +85,55 @@ def main():
 			if event.type == pygame.QUIT:
 				pygame.quit()
 				sys.exit(0)
-		if event.type == sound.event():
-			song.play_music()
 
-		keys = pygame.key.get_pressed()	
-		# a complete list of the pygame key constants can be found here: https://www.pygame.org/docs/ref/key.html
-		if keys[pygame.K_RIGHT]:
-			player.move(1)
-		if keys[pygame.K_LEFT]:
-			player.move(-1)
-		if keys[pygame.K_UP]:
-			player.jump()
+		if player.rect.right >= level.rect.right:
+			screen.fill(Color.blue_5)
+			font = pygame.font.SysFont("arial", 64)
+			f = font.render('YOU WIN', True, Color.yellow_0)
+			screen.blit(f, (230, 400))
+			pygame.display.flip()
 
-		floors.update()
-		enemies.update()
-		players.update(level,enemies,floors)
+		elif player.lives > 0:
+			if event.type == sound.event():
+				sound.play_music()
 
-		full_screen = level.get_full_screen()
-		floors.draw(full_screen)
-		enemies.draw(full_screen)
-		players.draw(full_screen)
+			keys = pygame.key.get_pressed()
+			# a complete list of the pygame key constants can be found here: https://www.pygame.org/docs/ref/key.html
+			if keys[pygame.K_RIGHT]:
+				player.move(1)
+			if keys[pygame.K_LEFT]:
+				player.move(-1)
+			if keys[pygame.K_UP]:
+				player.jump()
+			if keys[pygame.K_SPACE]:
+				player.jump()
+
+			floors.update()
+			enemies.update()
+			players.update(level,enemies,floors)
+
+			full_screen = level.get_full_screen()
+			floors.draw(full_screen)
+			enemies.draw(full_screen)
+			players.draw(full_screen)
 		
-		if level.screen_shake:
-			offset = level.shake()
-			level.screen_shake = False
+			if level.screen_shake:
+				offset = level.shake()
+				level.screen_shake = False
 		
-		screen.blit(level.get_screen(),next(offset),level.get_rect(screen_size,player))
-		pygame.display.flip()
+			screen.blit(level.get_screen(),next(offset),level.get_rect(screen_size,player))
+			pygame.display.flip()
+		else:
+			screen.fill(Color.black)
+			font = pygame.font.SysFont("arial", 64)
+			g = pygame.sprite.Group()
+			skull = GameOver()
+			g.add(skull)
+			g.draw(screen)
+			f = font.render('GAME OVER', True, Color.white)
+			screen.blit(f, (230, 400))
+			pygame.display.flip()
+
 
 if __name__ == '__main__':
 	main()
